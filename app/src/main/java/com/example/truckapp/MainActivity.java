@@ -14,11 +14,18 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.CheckBox;
+import android.widget.Spinner;
 import android.widget.TextView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,9 +37,10 @@ import java.util.TimerTask;
 
 import static com.example.truckapp.DeviceProfile.DEVICE_ADDRESS;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     private static final int UPDATE_IMAGE = 1;
     private static final int UPDATE_FIND = 2;
+    private static final int UPDATE_RECV = 3;
     BluetoothAdapter mBluetoothAdapter;
     private String TAG = "BLE";
     int BLUETOOTH_REQUEST_CODE = 1;
@@ -41,52 +49,82 @@ public class MainActivity extends AppCompatActivity {
     boolean isConnected = false;
     private Set<String> deviceNames = new HashSet<>();
     private Set<BluetoothDevice> devices = new LinkedHashSet<>();
+    String m_prevRecvMessage="";
     Button startScanButton;
     Timer timer;
     TextView textViewA;
-    TextView textViewB;
-    TextView textViewC;
-    ImageView imageViewRedA;
-    ImageView imageViewGreenA;
-    ImageView imageViewRedB;
-    ImageView imageViewGreenB;
-    ImageView imageViewRedC;
-    ImageView imageViewGreenC;
+    TextView editTextLog;
+    String m_NameRC;
     private TextView textViewStatus;
-    InfoRC infoRC1, infoRC2, infoRC3;
+    private Spinner spinner;
+    ArrayList<String> dataRCrus = new ArrayList<>();
+    ArrayList<String> dataRC = new ArrayList<>();
+
+    CheckBox checkBox1;
+    CheckBox checkBox2;
     public Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
             //StopWatch.time.setText(formatIntoHHMMSS(elapsedTime)); //this is the textview
             Log.d(TAG, "Event handler");
             if (msg.what == UPDATE_IMAGE) {
-                try {
-                    String str = (String) msg.obj;
-                    //imageViewGreenA.setVisibility(View.INVISIBLE);
-                    String result[] = str.split(";");
-//                String StringA[] = result[0].split(" ");
-//                String StringB[] = result[1].split(" ");
-//                String StringC[] = result[2].split(" ");
 
-                    String[] res = result[0].split(" ");
-                    int busy = Integer.parseInt(res[1]);
-                    infoRC1.update(busy, res[2]);
-
-                    res = result[1].split(" ");
-                    busy = Integer.parseInt(res[1]);
-                    infoRC2.update(busy, res[2]);
-
-                    res = result[2].split(" ");
-                    busy = Integer.parseInt(res[1]);
-                    infoRC3.update(busy, res[2]);
-                } catch (Exception ex) {
-
-                }
             } else if (msg.what == UPDATE_FIND) {
                 textViewStatus.setText("Найден " + DEVICE_ADDRESS);
+            } else if (msg.what == UPDATE_RECV) {
+                String str = (String) msg.obj;
+                try {
+                    JSONObject json = new JSONObject(str);
+                    String source = (String) json.get("source");
+                    if ("ESP32".equals(source)) {
+                        Log.d(TAG, "Event handler json=" + json.toString());
+                        String data = (String) json.get("data");
+                        int time = (int) json.get("ms");
+                        String channel = "неизв.";
+                        if (json.getString("channel").equals("ch1"))
+                            channel = "канал 1";
+                        else if (json.getString("channel").equals("ch2"))
+                            channel = "канал 2";
+
+                        int ID = (int) json.get("ID");
+                        int global_ID = (int) json.get("GlobalID");
+                        int RSSI = (int) json.get("RSSI");
+                        int SNR = (int) json.get("SNR");
+                        byte array[] = data.getBytes();
+
+                        String text = String.format("%s global_ID=%d data=%s rssi=%d rssi4=%d rssi5=%d rssi6=%d rssi7=%d rssi8=%d snr=%d ms=%d", channel, global_ID, data,RSSI,
+                                -(int)array[4],-(byte)array[5],-(byte)array[6],-(byte)array[7],-(byte)array[8],SNR,time);
+                        textViewA.setText(data.substring(0,3)+" В");
+                        editTextLog.append(text + System.getProperty("line.separator"));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
 //            imageViewGreenB.setVisibility(View.INVISIBLE);
         }
     };
+
+
+    private void createSpinner() {
+        spinner = findViewById(R.id.spinnerRC);
+        dataRCrus.add("1П");
+        dataRCrus.add("2П");
+        dataRCrus.add("3П");
+        dataRCrus.add("4П");
+
+        dataRC.add("1P");
+        dataRC.add("2P");
+        dataRC.add("3P");
+        dataRC.add("4P");
+//        spinnerAdapter = new ArrayAdapter(this,android.R.layout.simple_spinner_item,data);
+//        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
+//        spinner.setAdapter(spinnerAdapter);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item, dataRCrus);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(this);
+    }
 
 
     @Override
@@ -95,19 +133,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         textViewA = (TextView) findViewById(R.id.Text_A);
-        textViewB = (TextView) findViewById(R.id.Text_B);
-        textViewC = (TextView) findViewById(R.id.Text_C);
         textViewStatus = (TextView) findViewById(R.id.Text_Status);
-        imageViewRedA = (ImageView) findViewById(R.id.RC_A_RED);
-        imageViewGreenA = (ImageView) findViewById(R.id.RC_A_Green);
-        imageViewRedB = (ImageView) findViewById(R.id.RC_B_RED);
-        imageViewGreenB = (ImageView) findViewById(R.id.RC_B_Green);
-        imageViewRedC = (ImageView) findViewById(R.id.RC_C_RED);
-        imageViewGreenC = (ImageView) findViewById(R.id.RC_C_Green);
-        infoRC1 = new InfoRC(imageViewRedA, imageViewGreenA, textViewA);
-        infoRC2 = new InfoRC(imageViewRedB, imageViewGreenB, textViewB);
-        infoRC3 = new InfoRC(imageViewRedC, imageViewGreenC, textViewC);
+        editTextLog = (TextView) findViewById(R.id.editTextLog);
         startScanButton = (Button) findViewById(R.id.buttonScan);
+        checkBox1 = (CheckBox) findViewById(R.id.checkBoxChannel1);
+        checkBox2 = (CheckBox) findViewById(R.id.checkBoxChannel2);
 //        btnScan = (Button) findViewById(R.id.buttonScan);
 //        btnScan.setOnClickListener(OnClickListener);
 
@@ -117,6 +147,11 @@ public class MainActivity extends AppCompatActivity {
 //        statusTextView = (TextView) findViewById(R.id.statusTextView);
 
         loraLink = new LoraLink(this);
+
+        editTextLog.setMovementMethod(ScrollingMovementMethod.getInstance());
+
+        createSpinner();
+        m_NameRC = dataRC.get(0);
     }
 
     private ScanCallback newCallBack = new ScanCallback() {
@@ -180,18 +215,14 @@ public class MainActivity extends AppCompatActivity {
         ) {
             if (dev.getAddress().equals(DEVICE_ADDRESS)) {
                 Log.d(TAG, "Connect device " + dev.getName());
-                //bluetoothGatt = dev.connectGatt(av.getContext(), true, gattCallback);
                 loraLink.connectGatt(dev);
                 SystemClock.sleep(1500);
-//                if (loraLink.isConnected()) {
-//                    isConnected = true;
-
-                loraLink.writeValue("RC");
-                SystemClock.sleep(500);
+                //loraLink.writeValue("RC");
+                //SystemClock.sleep(500);
                 if (loraLink.isConnected())
                     textViewStatus.setText("Соединение установлено");
                 Log.d(TAG, "isConnected = true");
-                timer = new Timer();
+                                timer = new Timer();
                 TimerTask t = new TimerTask() {
                     @Override
                     public void run() {
@@ -200,27 +231,46 @@ public class MainActivity extends AppCompatActivity {
 
                             if (val != null) {
                                 String str = new String(val);
-//                                textViewA.setText(StringA[2]+ " B");
-//                                textViewB.setText(StringB[2]+ " B");
-//                                mHandler.obtainMessage(1).sendToTarget();
-                                Message msg = mHandler.obtainMessage();
-                                msg.obj = str;
-                                msg.what = UPDATE_IMAGE;
-                                msg.arg1 = 1;
-                                mHandler.sendMessage(msg);
-                                Log.d(TAG, "recv: " + str);
+                                if (!m_prevRecvMessage.equals(str)) {
+                                    Message msg = mHandler.obtainMessage();
+                                    m_prevRecvMessage = str;
+                                    msg.obj = str;
+                                    msg.what = UPDATE_RECV;
+                                    msg.arg1 = 1;
+                                    mHandler.sendMessage(msg);
 
+                                    Log.d(TAG, "recv: " + str);
+                                }
+                                else
+                                    Log.d(TAG, "recv duplicate : " + str);
                             } else
                                 Log.d(TAG, "empty read");
                         }
                     }
                 };
-                timer.scheduleAtFixedRate(t, 1000, 1000);
-//                } else
-//                {
-//                    isConnected = false;
-//                    Log.d(TAG,"isConnected = false");
-//                }
+                timer.schedule(t, 0, 5000);
+//                timer = new Timer();
+//                TimerTask t = new TimerTask() {
+//                    @Override
+//                    public void run() {
+//                        if (loraLink.isConnected()) {
+//                            byte[] val = loraLink.readValue();
+//
+//                            if (val != null) {
+//                                String str = new String(val);
+//                                Message msg = mHandler.obtainMessage();
+//                                msg.obj = str;
+//                                msg.what = UPDATE_IMAGE;
+//                                msg.arg1 = 1;
+//                                mHandler.sendMessage(msg);
+//                                Log.d(TAG, "recv: " + str);
+//
+//                            } else
+//                                Log.d(TAG, "empty read");
+//                        }
+//                    }
+//                };
+//                timer.scheduleAtFixedRate(t, 1000, 1000);
                 return;
             }
 
@@ -243,5 +293,42 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
+    }
+
+    public void onSend(View view) {
+        JSONObject json = new JSONObject();
+        //Log.d(TAG, "Event handler json="+json.toString());
+        try {
+            String channel="";
+            if (checkBox1.isChecked())
+                channel = "ch1";
+            else if (checkBox2.isChecked())
+                channel = "ch2";
+
+            if (checkBox1.isChecked() && checkBox2.isChecked())
+                channel = "all";
+            json.put("channel",channel);
+            json.put("data",m_NameRC);
+            json.put("command","SEND");
+            json.put("source","android");
+            if (loraLink.isConnected())
+                loraLink.writeValue(json.toString());
+            Log.d(TAG, "send json="+json.toString());
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        //m_NameRC = spinner.getSelectedItem().toString();
+        m_NameRC = dataRC.get(position);
+
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
     }
 }

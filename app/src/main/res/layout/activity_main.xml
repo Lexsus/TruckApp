@@ -6,13 +6,56 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/editTextLog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/Text_A"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="20dp"
+        android:height="150dp"
+        android:ems="10"
+        android:gravity="start|top"
+        android:inputType="textMultiLine"
+        android:scrollbars="vertical"
+        android:singleLine="true" />
+
+    <CheckBox
+        android:id="@+id/checkBoxChannel1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextLog"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:text="Канал 1(2р/р)" />
+
+    <CheckBox
+        android:id="@+id/checkBoxChannel2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextLog"
+        android:layout_toEndOf="@+id/checkBoxChannel1"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:text="Канал 2(1р/р)" />
+
+    <Button
+        android:id="@+id/buttonSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/checkBoxChannel1"
+        android:layout_marginStart="160dp"
+        android:layout_marginTop="20dp"
+        android:onClick="onSend"
+        android:text="Send" />
+
     <Button
         android:id="@+id/buttonConnect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/RC_B_Green"
+        android:layout_below="@id/buttonSend"
         android:layout_marginStart="160dp"
-        android:layout_marginTop="200dp"
+        android:layout_marginTop="20dp"
         android:onClick="onConnect"
         android:text="Connect" />
 
@@ -26,64 +69,6 @@
         android:onClick="onScan"
         android:text="SCAN" />
 
-    <ImageView
-        android:id="@+id/RC_A_RED"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/Text_A"
-        android:layout_marginStart="40dp"
-        android:layout_marginTop="20dp"
-        app:srcCompat="@drawable/red_small" />
-
-    <ImageView
-        android:id="@+id/RC_A_Green"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/Text_A"
-        android:layout_marginStart="40dp"
-        android:layout_marginTop="20dp"
-        app:srcCompat="@drawable/green_small" />
-
-    <ImageView
-        android:id="@+id/RC_B_RED"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/Text_B"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_toRightOf="@id/RC_A_RED"
-        app:srcCompat="@drawable/red_small" />
-
-    <ImageView
-        android:id="@+id/RC_B_Green"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/Text_B"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_toRightOf="@id/RC_A_RED"
-        app:srcCompat="@drawable/green_small" />
-
-    <ImageView
-        android:id="@+id/RC_C_RED"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/Text_B"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_toRightOf="@id/RC_B_RED"
-        app:srcCompat="@drawable/red_small" />
-
-    <ImageView
-        android:id="@+id/RC_C_Green"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/Text_B"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_toRightOf="@id/RC_B_RED"
-        app:srcCompat="@drawable/green_small" />
-
     <TextView
         android:id="@+id/Text_Status"
         android:layout_width="match_parent"
@@ -96,79 +81,24 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/Text_Name_A"
-        android:layout_width="100dp"
-        android:layout_height="30dp"
-        android:layout_below="@id/Text_Status"
-        android:layout_marginStart="40dp"
-        android:layout_marginTop="20dp"
-        android:text="1П"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/Text_Name_B"
-        android:layout_width="100dp"
-        android:layout_height="30dp"
-        android:layout_below="@id/Text_Status"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_toRightOf="@id/Text_Name_A"
-        android:text="2П"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/Text_Name_C"
-        android:layout_width="100dp"
-        android:layout_height="30dp"
-        android:layout_below="@id/Text_Status"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_toRightOf="@id/Text_Name_B"
-        android:text="3П"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        android:textStyle="bold" />
-
-    <TextView
         android:id="@+id/Text_A"
         android:layout_width="100dp"
         android:layout_height="30dp"
-        android:layout_below="@id/Text_Name_A"
+        android:layout_below="@id/Text_Status"
+        android:layout_marginStart="140dp"
+        android:layout_marginTop="20dp"
+        android:text="---"
+        android:textAlignment="center"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <Spinner
+        android:id="@+id/spinnerRC"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/Text_Status"
         android:layout_marginStart="40dp"
-        android:layout_marginTop="20dp"
-        android:text="volt A"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:layout_marginTop="20dp" />
 
-    <TextView
-        android:id="@+id/Text_B"
-        android:layout_width="100dp"
-        android:layout_height="30dp"
-        android:layout_below="@id/Text_Name_B"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_toRightOf="@id/Text_A"
-        android:text="volt B"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/Text_C"
-        android:layout_width="100dp"
-        android:layout_height="30dp"
-        android:layout_below="@id/Text_Name_C"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_toRightOf="@id/Text_B"
-        android:text="volt B"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        android:textStyle="bold" />
 
 </RelativeLayout>

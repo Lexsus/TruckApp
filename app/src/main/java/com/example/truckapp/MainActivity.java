@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     Timer timer;
     TextView textViewA;
     TextView editTextLog;
+    TextView editTextRSSI;
     String m_NameRC;
     private TextView textViewStatus;
     private Spinner spinner;
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     CheckBox checkBox1;
     CheckBox checkBox2;
+    CheckBox checkBoxCircle;
     public Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
             //StopWatch.time.setText(formatIntoHHMMSS(elapsedTime)); //this is the textview
@@ -75,26 +77,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 try {
                     JSONObject json = new JSONObject(str);
                     String source = (String) json.get("source");
+                    String command = (String) json.get("command");
                     if ("ESP32".equals(source)) {
                         Log.d(TAG, "Event handler json=" + json.toString());
-                        String data = (String) json.get("data");
-                        int time = (int) json.get("ms");
-                        String channel = "неизв.";
-                        if (json.getString("channel").equals("ch1"))
-                            channel = "канал 1";
-                        else if (json.getString("channel").equals("ch2"))
-                            channel = "канал 2";
+                        if ("RECV".equals(command)) {
+                            onCommandRecv(json);
+                        }
+                        if ("SF".equals(command)) {
+                            onCommandSF(json);
+                        }
 
-                        int ID = (int) json.get("ID");
-                        int global_ID = (int) json.get("GlobalID");
-                        int RSSI = (int) json.get("RSSI");
-                        int SNR = (int) json.get("SNR");
-                        byte array[] = data.getBytes();
-
-                        String text = String.format("%s global_ID=%d data=%s rssi=%d rssi4=%d rssi5=%d rssi6=%d rssi7=%d rssi8=%d snr=%d ms=%d", channel, global_ID, data,RSSI,
-                                -(int)array[4],-(byte)array[5],-(byte)array[6],-(byte)array[7],-(byte)array[8],SNR,time);
-                        textViewA.setText(data.substring(0,3)+" В");
-                        editTextLog.append(text + System.getProperty("line.separator"));
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -102,8 +94,71 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
 //            imageViewGreenB.setVisibility(View.INVISIBLE);
         }
+
+        private void onCommandRecv(JSONObject json) throws JSONException {
+            String data = (String) json.get("data");
+            int time = (int) json.get("ms");
+            String channel = "неизв.";
+            if (json.getString("channel").equals("ch1"))
+                channel = "канал 1";
+            else if (json.getString("channel").equals("ch2"))
+                channel = "канал 2";
+
+            int ID = (int) json.get("ID");
+            int global_ID = (int) json.get("GlobalID");
+            int RSSI = (int) json.get("RSSI");
+            int SNR = (int) json.get("SNR");
+            byte array[] = data.getBytes();
+
+            String log = String.format("%s global_ID=%d data=%s rssi=%d snr=%d ms=%d", channel, global_ID, data,RSSI,SNR,time);
+            textViewA.setText(data.substring(0,3)+" В");
+            StringBuilder strRSSI = new StringBuilder();
+            appendRSSI(strRSSI,json);
+
+
+            //String strRSSI =
+            editTextRSSI.setText(strRSSI);
+            editTextLog.append(log + System.getProperty("line.separator"));
+        }
+
+        private void onCommandSF(JSONObject json) throws JSONException {
+            String data = (String) json.get("data");
+            String channel = "неизв.";
+            if (json.getString("channel").equals("ch1"))
+                channel = "канал 1";
+            else if (json.getString("channel").equals("ch2"))
+                channel = "канал 2";
+
+
+
+            String log = String.format("SF смена%s: %s", channel, data);
+            //String strRSSI =
+            editTextLog.append(log + System.getProperty("line.separator"));
+        }
     };
 
+
+    private void appendRSSI(StringBuilder strRSSI,JSONObject json) throws JSONException {
+        if ((byte)json.getInt("RSSI5")!=32)
+            strRSSI.append("RSSI5=" + (-(byte)json.getInt("RSSI5"))+System.getProperty("line.separator"));
+        else
+            strRSSI.append("RSSI5=--" + System.getProperty("line.separator"));
+
+        if ((byte)json.getInt("RSSI6")!=32)
+            strRSSI.append("RSSI6=" + (-(byte)json.getInt("RSSI6"))+System.getProperty("line.separator"));
+        else
+            strRSSI.append("RSSI6=--" + System.getProperty("line.separator"));
+
+        if ((byte)json.getInt("RSSI7")!=32)
+            strRSSI.append("RSSI7=" + (-(byte)json.getInt("RSSI7"))+System.getProperty("line.separator"));
+        else
+            strRSSI.append("RSSI7=--" + System.getProperty("line.separator"));
+
+        if ((byte)json.getInt("RSSI8")!=32)
+            strRSSI.append("RSSI8=" + (-(byte)json.getInt("RSSI8"))+System.getProperty("line.separator"));
+        else
+            strRSSI.append("RSSI8=--" + System.getProperty("line.separator"));
+    }
 
     private void createSpinner() {
         spinner = findViewById(R.id.spinnerRC);
@@ -135,9 +190,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         textViewA = (TextView) findViewById(R.id.Text_A);
         textViewStatus = (TextView) findViewById(R.id.Text_Status);
         editTextLog = (TextView) findViewById(R.id.editTextLog);
+        editTextRSSI = (TextView) findViewById(R.id.editTextRSSI);
         startScanButton = (Button) findViewById(R.id.buttonScan);
         checkBox1 = (CheckBox) findViewById(R.id.checkBoxChannel1);
         checkBox2 = (CheckBox) findViewById(R.id.checkBoxChannel2);
+        checkBoxCircle = (CheckBox) findViewById(R.id.checkBoxCircle);
 //        btnScan = (Button) findViewById(R.id.buttonScan);
 //        btnScan.setOnClickListener(OnClickListener);
 
@@ -285,10 +342,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         } else {
             isStartSearch = !isStartSearch;
             if (isStartSearch) {
-                startScanButton.setText("STOP");
+                startScanButton.setText("СТОП");
                 startBleScan();
             } else {
-                startScanButton.setText("SCAN");
+                startScanButton.setText("СКАН");
                 stopBleScan();
             }
 
@@ -307,6 +364,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             if (checkBox1.isChecked() && checkBox2.isChecked())
                 channel = "all";
+
+            String circle = "false";
+            if (checkBoxCircle.isChecked())
+                circle = "true";
+
+            json.put("circle",circle);
             json.put("channel",channel);
             json.put("data",m_NameRC);
             json.put("command","SEND");
@@ -330,5 +393,29 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
 
+    }
+
+    public void onSetSF(View view) {
+        JSONObject json = new JSONObject();
+        try {
+            String channel="";
+            if (checkBox1.isChecked())
+                channel = "ch1";
+            else if (checkBox2.isChecked())
+                channel = "ch2";
+
+            if (checkBox1.isChecked() && checkBox2.isChecked())
+                channel = "all";
+
+            json.put("channel",channel);
+            json.put("command","SF");
+            json.put("source","android");
+            if (loraLink.isConnected())
+                loraLink.writeValue(json.toString());
+            Log.d(TAG, "send json="+json.toString());
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 }

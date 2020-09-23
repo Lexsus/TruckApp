@@ -10,10 +10,25 @@
         android:id="@+id/editTextLog"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/Text_A"
+        android:layout_below="@id/editTextRSSI"
         android:layout_marginStart="10dp"
         android:layout_marginTop="20dp"
         android:height="150dp"
+        android:ems="10"
+        android:gravity="start|top"
+        android:inputType="textMultiLine"
+        android:scrollbars="vertical"
+        android:singleLine="true" />
+
+    <TextView
+        android:id="@+id/editTextRSSI"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/Text_Status"
+        android:layout_toEndOf="@+id/Text_A"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="20dp"
+        android:height="100dp"
         android:ems="10"
         android:gravity="start|top"
         android:inputType="textMultiLine"
@@ -25,7 +40,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/editTextLog"
-        android:layout_marginStart="20dp"
+        android:layout_marginStart="10dp"
         android:layout_marginTop="20dp"
         android:text="Канал 1(2р/р)" />
 
@@ -35,39 +50,63 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/editTextLog"
         android:layout_toEndOf="@+id/checkBoxChannel1"
-        android:layout_marginStart="20dp"
+        android:layout_marginStart="10dp"
         android:layout_marginTop="20dp"
         android:text="Канал 2(1р/р)" />
+
+    <CheckBox
+        android:id="@+id/checkBoxCircle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextLog"
+        android:layout_toEndOf="@+id/checkBoxChannel2"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="20dp"
+        android:text="Цикл" />
 
     <Button
         android:id="@+id/buttonSend"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/checkBoxChannel1"
-        android:layout_marginStart="160dp"
+        android:layout_marginStart="20dp"
         android:layout_marginTop="20dp"
         android:onClick="onSend"
-        android:text="Send" />
+        android:layout_toEndOf="@+id/buttonConnect"
+        android:text="Отправить" />
 
     <Button
         android:id="@+id/buttonConnect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/buttonSend"
-        android:layout_marginStart="160dp"
+        android:layout_marginStart="20dp"
         android:layout_marginTop="20dp"
+        android:layout_toEndOf="@+id/buttonScan"
         android:onClick="onConnect"
-        android:text="Connect" />
+        android:layout_below="@id/checkBoxChannel1"
+        android:text="Соединение" />
 
     <Button
         android:id="@+id/buttonScan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/buttonConnect"
-        android:layout_marginStart="160dp"
+
+        android:layout_marginStart="20dp"
         android:layout_marginTop="20dp"
         android:onClick="onScan"
-        android:text="SCAN" />
+        android:layout_below="@id/checkBoxChannel1"
+        android:text="Скан" />
+
+    <Button
+        android:id="@+id/buttonSF"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:onClick="onSetSF"
+        android:layout_below="@id/buttonScan"
+        android:text="SF12" />
 
     <TextView
         android:id="@+id/Text_Status"

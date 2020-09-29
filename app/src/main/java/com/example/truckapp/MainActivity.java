@@ -27,7 +27,9 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -51,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Set<BluetoothDevice> devices = new LinkedHashSet<>();
     String m_prevRecvMessage="";
     Button startScanButton;
+    Calendar calendar;
     Timer timer;
     TextView textViewA;
     TextView editTextLog;
@@ -110,7 +113,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             int SNR = (int) json.get("SNR");
             byte array[] = data.getBytes();
 
-            String log = String.format("%s global_ID=%d data=%s rssi=%d snr=%d ms=%d", channel, global_ID, data,RSSI,SNR,time);
+            calendar = Calendar.getInstance();
+            SimpleDateFormat dateformat = new SimpleDateFormat("hh:mm:ss");
+            String datetime = dateformat.format(calendar.getTime());
+
+
+            String log = String.format("[%s]%s global_ID=%d data=%s rssi=%d snr=%d ms=%d",datetime, channel, global_ID, data,RSSI,SNR,time);
             textViewA.setText(data.substring(0,3)+" В");
             StringBuilder strRSSI = new StringBuilder();
             appendRSSI(strRSSI,json);

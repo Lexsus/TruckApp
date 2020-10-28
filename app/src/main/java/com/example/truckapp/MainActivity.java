@@ -24,6 +24,9 @@ import android.widget.CheckBox;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.example.truckapp.di.app.App;
+import com.example.truckapp.di.app.BleModule.IBleUtils;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -37,6 +40,8 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.inject.Inject;
+
 import static com.example.truckapp.DeviceProfile.DEVICE_ADDRESS;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
@@ -47,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private String TAG = "BLE";
     int BLUETOOTH_REQUEST_CODE = 1;
     boolean isStartSearch = false;
-    LoraLink loraLink;
+    //LoraLink loraLink;
     boolean isConnected = false;
     private Set<String> deviceNames = new HashSet<>();
     private Set<BluetoothDevice> devices = new LinkedHashSet<>();
@@ -67,6 +72,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     CheckBox checkBox1;
     CheckBox checkBox2;
     CheckBox checkBoxCircle;
+    @Inject
+    IBleUtils bleUtils;
     public Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
             //StopWatch.time.setText(formatIntoHHMMSS(elapsedTime)); //this is the textview
@@ -194,7 +201,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         textViewA = (TextView) findViewById(R.id.Text_A);
         textViewStatus = (TextView) findViewById(R.id.Text_Status);
         editTextLog = (TextView) findViewById(R.id.editTextLog);
@@ -206,12 +212,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 //        btnScan = (Button) findViewById(R.id.buttonScan);
 //        btnScan.setOnClickListener(OnClickListener);
 
+        App.getComponent().inject(this);
         mBluetoothAdapter = ((BluetoothManager) getSystemService(BLUETOOTH_SERVICE))
                 .getAdapter();
 
 //        statusTextView = (TextView) findViewById(R.id.statusTextView);
 
-        loraLink = new LoraLink(this);
+        //loraLink = new LoraLink(this);
 
         editTextLog.setMovementMethod(ScrollingMovementMethod.getInstance());
 
@@ -280,19 +287,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         ) {
             if (dev.getAddress().equals(DEVICE_ADDRESS)) {
                 Log.d(TAG, "Connect device " + dev.getName());
-                loraLink.connectGatt(dev);
+                bleUtils.connectGatt(dev);
                 SystemClock.sleep(1500);
                 //loraLink.writeValue("RC");
                 //SystemClock.sleep(500);
-                if (loraLink.isConnected())
+                if (bleUtils.isConnected())
                     textViewStatus.setText("Соединение установлено");
                 Log.d(TAG, "isConnected = true");
                                 timer = new Timer();
                 TimerTask t = new TimerTask() {
                     @Override
                     public void run() {
-                        if (loraLink.isConnected()) {
-                            byte[] val = loraLink.readValue();
+                        if (bleUtils.isConnected()) {
+                            byte[] val = bleUtils.readValue();
 
                             if (val != null) {
                                 String str = new String(val);
@@ -382,8 +389,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             json.put("data",m_NameRC);
             json.put("command","SEND");
             json.put("source","android");
-            if (loraLink.isConnected())
-                loraLink.writeValue(json.toString());
+            if (bleUtils.isConnected())
+                bleUtils.writeValue(json.toString());
             Log.d(TAG, "send json="+json.toString());
 
         } catch (JSONException e) {
@@ -418,8 +425,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             json.put("channel",channel);
             json.put("command","SF");
             json.put("source","android");
-            if (loraLink.isConnected())
-                loraLink.writeValue(json.toString());
+            if (bleUtils.isConnected())
+                bleUtils.writeValue(json.toString());
             Log.d(TAG, "send json="+json.toString());
 
         } catch (JSONException e) {

@@ -64,10 +64,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     TextView editTextLog;
     TextView editTextRSSI;
     String m_NameRC;
+    String m_Command;
+    String m_CommandParam;
+    int m_Source;
     private TextView textViewStatus;
-    private Spinner spinner;
+    private Spinner spinnerRC;
+    private Spinner spinnerCommand;
+    private Spinner spinnerSource;
+    private TextView textviewCommandParam;
     ArrayList<String> dataRCrus = new ArrayList<>();
     ArrayList<String> dataRC = new ArrayList<>();
+    ArrayList<String> dataCommand = new ArrayList<>();
+    ArrayList<Integer> dataSource = new ArrayList<>();
 
     CheckBox checkBox1;
     CheckBox checkBox2;
@@ -176,7 +184,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void createSpinner() {
-        spinner = findViewById(R.id.spinnerRC);
+        spinnerRC = findViewById(R.id.spinnerRC);
+        spinnerCommand = findViewById(R.id.spinnerCommand);
+        textviewCommandParam = findViewById(R.id.textViewCommandParam);
+        spinnerSource = findViewById(R.id.spinnerSource);
         dataRCrus.add("1П");
         dataRCrus.add("2П");
         dataRCrus.add("3П");
@@ -186,14 +197,40 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         dataRC.add("2P");
         dataRC.add("3P");
         dataRC.add("4P");
+
+        dataCommand.add("SF");
+        dataCommand.add("RST");
+        dataCommand.add("PWR");
+        dataCommand.add("LTH");
+
+        for (int i=0;i<10;i++)
+            dataSource.add(i);
 //        spinnerAdapter = new ArrayAdapter(this,android.R.layout.simple_spinner_item,data);
 //        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
 //        spinner.setAdapter(spinnerAdapter);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+        ArrayAdapter<String> adapterRC = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, dataRCrus);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
-        spinner.setOnItemSelectedListener(this);
+        adapterRC.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerRC.setAdapter(adapterRC);
+        spinnerRC.setOnItemSelectedListener(this);
+
+        ArrayAdapter<String> adapterCommand = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item, dataCommand);
+        adapterCommand.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCommand.setAdapter(adapterCommand);
+        spinnerCommand.setOnItemSelectedListener(this);
+
+        ArrayAdapter<Integer> adapterSource = new ArrayAdapter<Integer>(this,
+                android.R.layout.simple_spinner_item, dataSource);
+        adapterSource.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSource.setAdapter(adapterSource);
+        spinnerSource.setOnItemSelectedListener(this);
+
+//        ArrayAdapter<Integer> adapterCommandAdditional = new ArrayAdapter<Integer>(this,
+//                android.R.layout.simple_spinner_item, dataSource);
+//        adapterSource.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        textviewCommandParam.setAdapter(adapterCommandAdditional);
+//        textviewCommandParam.setOnItemSelectedListener(this);
     }
 
 
@@ -401,8 +438,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         //m_NameRC = spinner.getSelectedItem().toString();
-        m_NameRC = dataRC.get(position);
-
+        if (parent==spinnerRC)
+            m_NameRC = dataRC.get(position);
+        else if (parent==spinnerCommand)
+            m_Command = dataCommand.get(position);
+        else if (parent==spinnerSource)
+            m_Source = dataSource.get(position);
     }
 
     @Override
@@ -423,7 +464,32 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 channel = "all";
 
             json.put("channel",channel);
-            json.put("command","SF");
+            json.put("command","SET_SF");
+            json.put("source","android");
+            if (bleUtils.isConnected())
+                bleUtils.writeValue(json.toString());
+            Log.d(TAG, "send json="+json.toString());
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void OnSendCommand(View view) {
+        JSONObject json = new JSONObject();
+        try {
+            String channel="";
+            if (checkBox1.isChecked())
+                channel = "ch1";
+            else if (checkBox2.isChecked())
+                channel = "ch2";
+
+            if (checkBox1.isChecked() && checkBox2.isChecked())
+                channel = "all";
+
+            json.put("channel",channel);
+            json.put("command",m_Command);
+            json.put("command_param",textviewCommandParam.getText());
             json.put("source","android");
             if (bleUtils.isConnected())
                 bleUtils.writeValue(json.toString());
